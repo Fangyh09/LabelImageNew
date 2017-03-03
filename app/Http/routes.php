@@ -19,16 +19,23 @@ Route::get('index', function () {
     return view('index');
 });
 
+Route::get('index2', function () {
+    return view('index2');
+});
+
 Route::get('show', function () {
     echo ("1111111111");
 });
 
 Route::any('test', ['uses' => 'ImageController@test']);
 
+Route::any('getData', ['uses' => 'ImageController@getData']);
+Route::any('delData', ['uses' => 'ImageController@delData']);
+
 
 
 Route::any('labelimage', ['uses' => 'ImageController@index']);
-Route::any('Image/init', ['uses' => 'ImageController@init']);
+Route::any('init', ['uses' => 'ImageController@init']);
 /*
 
 

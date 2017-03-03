@@ -1,13 +1,17 @@
 (function($) {
     ///resultNotes is the result Annotations
     resultNotes = {}
-        ///to store the origin picture top & left
+    ///to store the origin picture top & left
     originImageTop = 0
     originImageLeft = 0
-        /// to show to annotations with specific person whose id is filterId
+    /// to show to annotations with specific person whose id is filterId
     filterId = 0
-        ///to image node itself, need to improve...
+    ///to image node itself, need to improve...
     imageTmpVar = {}
+
+    colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
+        [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
+        [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
     $.fn.annotateImage = function(options) {
         var opts = $.extend({}, $.fn.annotateImage.defaults, options);
         var image = this;
@@ -34,7 +38,7 @@
         this.editable = opts.editable;
         this.useAjax = opts.useAjax;
         this.notes = opts.notes;
-        //record the component pointer, using it to destory old component 
+        //record the component pointer, using it to destory old component
         this.memory = opts.memory;
         filterId = options.filterId;
 
@@ -112,10 +116,16 @@
         memory: new Array(),
         cicleRadius: 5,
         alpha: 0.8,
-        colors: []
+
     }
     $.fn.annotateImage.getAnnotations = function() {
-        var jsonAnnotations = JSON.stringify(resultNotes);
+        tmpresultNotes = $.fn.clone(resultNotes);
+        for (var idx in tmpresultNotes) {
+            tmpresultNotes[idx]['top'] = parseFloat(tmpresultNotes[idx]['top']) + $.fn.annotateImage.defaults['cicleRadius'];
+            tmpresultNotes[idx]['left'] = parseFloat(tmpresultNotes[idx]['left']) + $.fn.annotateImage.defaults['cicleRadius'];
+        }
+        var jsonAnnotations = JSON.stringify(tmpresultNotes);
+
         return jsonAnnotations;
         //console.log(jsonAnnotations);
     }
@@ -127,7 +137,7 @@
     };
 
     $.fn.annotateImage.reload = function() {
-        $.fn.annotateImage.load(imageTmpVar);
+        return $.fn.annotateImage.load(imageTmpVar);
     }
 
 
@@ -140,7 +150,7 @@
         addNew = false;
         $.fn.annotateImage.clear(image);
         for (var i = 0; i < image.notes.length; i++) {
-            if (image.notes[i]['groupId'] == filterId) {
+            if (parseInt(image.notes[i]['groupId']) == parseInt(filterId)) {
                 image.notes[image.notes[i]] = new $.fn.annotateView(image, image.notes[i]);
                 image.memory.push(image.notes[image.notes[i]]);
                 addNew = true;
@@ -163,8 +173,12 @@
         console.log(this.area);
 
         var c = document.getElementById('myCanvas' + note.id);
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        console.log(note);
+        var noteId = parseInt(note.partId);
+        var noteColor = "" + colors[noteId][0] + "," + colors[noteId][1] + "," + colors[noteId][2];
         var cxt = c.getContext("2d");
-        cxt.fillStyle = "#FF0000";
+        cxt.fillStyle = 'rgb(' + noteColor + ')';
         cxt.beginPath();
         cxt.globalAlpha = this.alpha;
         cxt.arc(this.r, this.r, this.r, 0, Math.PI * 2, true);
@@ -205,14 +219,17 @@
             containment: image.canvas,
             //containment: tmpc,
             drag: function(e, ui) {
-                form.css('left', (parseInt(area.offset().left) - originImageLeft) + 'px');
-                form.css('top', (parseInt(area.offset().top) - originImageTop + parseInt(area.height()) + 7) + 'px');
+                form.css('left', (parseFloat(area.offset().left) - originImageLeft) + 'px');
+                form.css('top', (parseFloat(area.offset().top) - originImageTop + parseInt(area.height()) + 7) + 'px');
             },
             stop: function(e, ui) {
-                form.css('left', (parseInt(area.offset().left) - originImageLeft) + 'px');
-                form.css('top', (parseInt(area.offset().top) - originImageTop + parseInt(area.height()) + 7) + 'px');
-                resultNotes[note["idxInArr"]]['left'] = parseInt(tmpc.offset().left) - originImageLeft + tmpr;
-                resultNotes[note["idxInArr"]]['top'] = parseInt(tmpc.offset().top) - originImageTop + tmpr;
+                form.css('left', (parseFloat(area.offset().left) - originImageLeft) + 'px');
+                form.css('top', (parseFloat(area.offset().top) - originImageTop + parseFloat(area.height()) + 7) + 'px');
+                //resultNotes[note["idxInArr"]]['left'] = parseInt(tmpc.offset().left) - originImageLeft + tmpr;
+                //resultNotes[note["idxInArr"]]['top'] = parseInt(tmpc.offset().top) - originImageTop + tmpr;
+
+                resultNotes[note["idxInArr"]]['left'] = parseFloat(tmpc.offset().left) - originImageLeft + tmpr;
+                resultNotes[note["idxInArr"]]['top'] = parseFloat(tmpc.offset().top) - originImageTop + tmpr;
                 console.log(area.offset());
                 var x = JSON.stringify(resultNotes);
                 console.log(x);
@@ -223,12 +240,12 @@
 
     $.fn.annotateView.prototype.setPosition = function() {
         this.r = $.fn.annotateImage.defaults['cicleRadius'] * 2;
-        this.area.children('div').height((parseInt(this.r)) + 'px');
-        this.area.children('div').width((parseInt(this.r)) + 'px');
+        this.area.children('div').height((parseFloat(this.r)) + 'px');
+        this.area.children('div').width((parseFloat(this.r)) + 'px');
         this.area.css('left', (this.note.left) + 'px');
         this.area.css('top', (this.note.top) + 'px');
         this.form.css('left', (this.note.left) + 'px');
-        this.form.css('top', (parseInt(this.note.top) + parseInt(this.r) + 7) + 'px');
+        this.form.css('top', (parseFloat(this.note.top) + parseFloat(this.r) + 7) + 'px');
     }
 
     $.fn.annotateView.prototype.show = function() {
@@ -257,6 +274,39 @@
         /// </summary>      
         this.area.remove();
         this.form.remove();
+    }
+    $.fn.clone = function (obj) {
+        var copy;
+
+        // Handle the 3 simple types, and null or undefined
+        if (null == obj || "object" != typeof obj) return obj;
+
+        // Handle Date
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+
+        // Handle Array
+        if (obj instanceof Array) {
+            copy = [];
+            for (var i = 0, len = obj.length; i < len; i++) {
+                copy[i] = clone(obj[i]);
+            }
+            return copy;
+        }
+
+        // Handle Object
+        if (obj instanceof Object) {
+            copy = {};
+            for (var attr in obj) {
+                if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+            }
+            return copy;
+        }
+
+        throw new Error("Unable to copy obj! Its type isn't supported.");
     }
 
 })(jQuery);
