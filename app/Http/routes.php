@@ -15,6 +15,19 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('show', function () {
+    echo ("1111111111");
+});
+
+Route::any('test', ['uses' => 'ImageController@test']);
+
+
+
+Route::any('labelImage', ['uses' => 'ImageController@index']);
+Route::any('Image/init', ['uses' => 'ImageController@init']);
+/*
+
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -29,3 +42,7 @@ Route::get('/', function () {
 Route::group(['middleware' => ['web']], function () {
     //
 });
+
+Route::auth();
+
+Route::get('/home', 'HomeController@index');

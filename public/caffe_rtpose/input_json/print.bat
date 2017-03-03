@@ -1,0 +1,1 @@
+dir /b *.json /a-d > filenames.txt
