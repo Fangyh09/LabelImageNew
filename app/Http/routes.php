@@ -15,6 +15,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('index', function () {
+    return view('index');
+});
+
 Route::get('show', function () {
     echo ("1111111111");
 });
@@ -23,7 +27,7 @@ Route::any('test', ['uses' => 'ImageController@test']);
 
 
 
-Route::any('labelImage', ['uses' => 'ImageController@index']);
+Route::any('labelimage', ['uses' => 'ImageController@index']);
 Route::any('Image/init', ['uses' => 'ImageController@init']);
 /*
 

@@ -30,6 +30,13 @@ class ImageController extends Controller
         $path_parts = pathinfo($str);
         echo $path_parts['filename'];
     }
+
+    public function index() {
+        return view('index',[
+            'imageName' => '',
+            'imageNotes' => ''
+        ]);
+    }
 }
 
 
