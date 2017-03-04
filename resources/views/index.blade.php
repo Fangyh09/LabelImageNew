@@ -12,6 +12,7 @@
     <style type="text/css">
         #canvas-wrap { position:relative } /* Make this a positioned parent */
         #overlay     { position:absolute; top:0px; left:0px; }
+
     </style>
     <script type="text/javascript" src="{{asset('static/js/jquery.js')}}"></script>
     <script type="text/javascript" src="{{asset('static/js/jquery-ui.min.js')}}"></script>
@@ -23,8 +24,10 @@
         //offset changed, so temp solution.
         var outerTop = 0;
         var outerLeft = 0;
+        var outerWidth = 0;
+        var outerHeight = 0;
         var imageDbId = 0;
-        var originNotes = null;
+         originNotes = null;
 //        var myPicNames = new Array("images/pic1.jpg", "images/pic2.png", "images/pic3.png");
         //        var tmpNote1 = JSON.parse('[{"top":22,"left":22,"text":"a","groupId":0,"partId":0},{"top":22,"left":28,"text":"b","groupId":0,"partId":1},{"top":18,"left":22,"text":"c","groupId":1,"partId":0},{"top":67,"left":16,"text":"d","groupId":1,"partId":5}]');
         //        var tmpNote2 = JSON.parse('[{"top":82,"left":22,"text":"a","groupId":0,"partId":0},{"top":22,"left":68,"text":"b","groupId":0,"partId":1},{"top":58,"left":22,"text":"c","groupId":1,"partId":0},{"top":67,"left":76,"text":"d","groupId":1,"partId":1}]');
@@ -36,6 +39,7 @@
         initOuterTop_Left = function () {
             outerTop = $("#toAnnotate").offset().top;
             outerLeft = $("#toAnnotate").offset().left;
+//            alert(outerHeight);
         }
 
         nextPerson = function () {
@@ -47,14 +51,20 @@
                 $('#nextPerson_btn').prop('disabled', true);
                 $('#ok_btn').prop('disabled', false);
             }
+            $.fn.firstDrawLines(filterId);
+//            $.fn.firstDrawLines(filterId,originNotes);
         };
 
         print = function () {
             var annotations = $.fn.annotateImage.getAnnotations();
             annotations = JSON.parse(annotations);
+            //console.log(annotations.toString());
+//            alert((jsonRevWrapper(annotations)));
             return jsonRevWrapper(annotations);
+//            return annotations;
 //            console.log(jsonRevWrapper(annotations));
-//            alert(JSON.stringify(jsonRevWrapper(annotations)));
+
+
         }
 
         do_finish_once = function (noteJson) {
@@ -71,12 +81,15 @@
                 filterId: filterId
 
             });
-            console.log($.fn.annotateImage.getAnnotations());
+            $.fn.firstDrawLines(filterId);
+//             $.fn.firstDrawLines(filterId,originNotes);
+//            console.log($.fn.annotateImage.getAnnotations());
         }
 
 
 
         nextPicture = function () {
+
             $.ajax({
                 url: "http://localhost/LabelImagePhp/public/delData",
                 type: "post",
@@ -86,6 +99,11 @@
                 }
             }).then(function() {
                 $.getJSON( "http://localhost/LabelImagePhp/public/getData", function( data ) {
+                    var ok = data['ok'];
+                    if (parseInt(ok) == 0) {
+                        alert("图片加载完毕。");
+                        return;
+                    }
                     var imagePath = data['imagePath'];
                     console.log(data['noteJson']);
                     originNotes = data['noteJson'];
@@ -93,9 +111,10 @@
                     var noteJson = jsonWrapper(data['noteJson']);
 //                var modifiedNoteJson = jsonWrapper(noteJson);
 //                console.log(modifiedNoteJson);
-                    console.log(noteJson);
+//                    console.log(noteJson);
                     nextPictureWithPara(imagePath, noteJson);
                 });
+
             });
         }
         
@@ -118,6 +137,7 @@
                     jsonArr.push({
                         left: bodies[idx]['joints'][jdx],
                         top: bodies[idx]['joints'][jdx + 1],
+                        disable: bodies[idx]['joints'][jdx + 2] == 0, // need to consider == & ===
                         groupId: idx,
                         partId: jdx / 3,
                     });
@@ -140,13 +160,23 @@
                 res['bodies'][groupId]['joints'][partId * 3] = left;
                 res['bodies'][groupId]['joints'][partId * 3 + 1] = top;
             }
-            return res;
+            return JSON.stringify(res);
         }
 
         $(window).load(function () {
             initOuterTop_Left();
             nextPicture();
+            var html5Canvas = $('#drawCanvas');
+            var canvasDiv = $('#overlay');
+
+            if (html5Canvas.length > 0) {
+                html5Canvas[0].width = canvasDiv.width();
+                html5Canvas[0].height = canvasDiv.height();
+            }
+
+
         });
+
 
         function clone(obj) {
             var copy;
@@ -182,24 +212,24 @@
             throw new Error("Unable to copy obj! Its type isn't supported.");
         }
 
+
     </script>
 </head>
 
 <body>
-<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+<nav class="navbar navbar-default" role="navigation">
     <div class="container">
         <a class="navbar-brand" href="#">Label Image</a>
         <ul class="nav navbar-nav">
         </ul>
     </div>
 </nav>
+
 <div class="container">
+
     <div class="row">
-        <div class="jumbotron">
-            <p>
-                <br>
-            </p>
-            <img class="annotateMyClass" id="toAnnotate" src="#" alt="Trafalgar Square"/>
+        {{--<div class="jumbotron">--}}
+            <img class="annotateMyClass" id="toAnnotate" src="#" alt="Waiting for loading"/>
             <p></p>
             <p>
                 <button class="btn btn-primary btn-sm" style="margin: 5px" href="#" role="button" id="nextPerson_btn"
@@ -210,7 +240,7 @@
                 </button>
                 <button class="btn btn-primary btn-sm" href="#" role="button" onclick="print()">Print</button>
             </p>
-        </div>
+        {{--</div>--}}
     </div>
     <div class="row">
         <div class="col-xs-4">
@@ -234,24 +264,7 @@
     </div>
 </div> -->
 </body>
-<script type="text/javascript">
-    // $(":file").filestyle({buttonName: "btn-primary"});
 
-//    document.getElementById('file').onchange = function () {
-//        var file = this.files[0];
-//        var reader = new FileReader();
-//        reader.onload = function (progressEvent) {
-//            // Entire file
-//            console.log(this.result);
-//            // By lines
-//            var lines = this.result.split('\n');
-//            for (var line = 0; line < lines.length; line++) {
-//                console.log(lines[line]);
-//            }
-//        };
-//        reader.readAsText(file);
-//    };
-</script>
 
 
 </html>

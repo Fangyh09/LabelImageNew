@@ -17,7 +17,35 @@
     limbSeq = [[2,3], [2,6], [3,4], [4,5], [6,7], [7,8], [2,9], [9,10],
            [10,11], [2,12], [12,13], [13,14], [2,1], [1,15], [15,17],
            [1,16], [16,18], [3,17], [6,18]];
+    limbColors = [[255,127.5,0],[170,170,0],[255,212.5,0],[212.5,255,0],[42.5,255,0],[0,255,42.5],[127.5,170,85],
+        [0,255,212.5],[0,212.5,255],[127.5,85,127.5],[0,42.5,255],[42.5,0,255],[255,42.5,0],
+        [212.5,0,127.5],[212.5,0,212.5],[255,0,127.5],[255,0,170],[255,85,85],[170,127.5,42.5]];
+    nodeDisable = {};
+    nodePosition = {};
+    originImageWidth = 1000;
+    originImageHeight = 550;
+    $.fn.calclimbColors = function () {
+        limbColors = []
+
+        for (var idx in limbSeq) {
+            var c = "#";
+            for (var jdx = 0; jdx < 3; jdx ++) {
+                var v = (parseInt(colors[limbSeq[idx][0] - 1][jdx]) + parseInt(colors[limbSeq[idx][1] -1][jdx])) / 2;
+                var sub = v.toString(16).toUpperCase();
+                var padsub = ('0'+sub).slice(-2);
+                c += padsub;
+            }
+
+
+            limbColors.push(c);
+        }
+        console.log("color!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        console.log(JSON.stringify(limbColors));
+    }
+
     $.fn.annotateImage = function(options) {
+
+        $.fn.calclimbColors();
         var opts = $.extend({}, $.fn.annotateImage.defaults, options);
         var image = this;
 
@@ -29,7 +57,7 @@
         originImageLeft = options.left;
         originImageTop = options.top;
 
-        console.log(this.resultNotes);
+        // console.log(this.resultNotes);
 
         // editable: true,
         // useAjax: false,
@@ -48,20 +76,33 @@
         filterId = options.filterId;
 
 
-        for (idx in this.notes) {
-            this.notes[idx]['top'] = this.notes[idx]['top'] - $.fn.annotateImage.defaults['cicleRadius'];
-            this.notes[idx]['left'] = this.notes[idx]['left'] - $.fn.annotateImage.defaults['cicleRadius'];
+        for (var idx in this.notes) {
+            this.notes[idx]['top'] = parseFloat(this.notes[idx]['top']) - parseFloat($.fn.annotateImage.defaults['cicleRadius']);
+            this.notes[idx]['left'] = parseFloat(this.notes[idx]['left']) - parseFloat($.fn.annotateImage.defaults['cicleRadius']);
         }
 
 
-        for (idx in this.notes) {
+        for (var idx in this.notes) {
             this.notes[idx]['id'] = this.notes[idx]['groupId'] + "_" + this.notes[idx]['partId'];
             this.notes[idx]['idxInArr'] = idx;
         }
 
-        for (idx in this.notes) {
+        for (var idx in this.notes) {
             this.notes[idx]['text'] = this.notes[idx]['groupId'] + "_" + this.notes[idx]['partId'];
         }
+
+        var tmpNodeDisable = {}
+        for (var idx in this.notes) {
+            tmpNodeDisable[this.notes[idx]['id']] = this.notes[idx]['disable'];
+        }
+        nodeDisable = tmpNodeDisable;
+
+        var tmpnotePosition = {}
+        for (var idx in this.notes) {
+            tmpnotePosition[this.notes[idx]['id']] = [this.notes[idx]['top'],this.notes[idx]['left']];
+        }
+        nodePosition = tmpnotePosition;
+
 
         resultNotes = this.notes;
         console.log(resultNotes);
@@ -70,19 +111,31 @@
         console.log(x);
 
 
-        var innerStr = '<div id="overlay" class="image-annotate-canvas"><div class="image-annotate-view"></div><div class="image-annotate-edit"><div class="image-annotate-edit-area"></div></div></div>';
-        var totalStr = '<div id="canvas-wrap"><canvas width="800" height="600"></canvas>' + innerStr + '</div>';
+        var innerStr1 = '<div id="overlay" class="image-annotate-canvas"><div class="image-annotate-view"></div><div class="image-annotate-edit"><div class="image-annotate-edit-area"></div></div></div>';
+        var innerStr2 = '<canvas id="drawCanvas" width="10000" height="550"></canvas>';
+        var totalStr = '<div id="canvas-wrap">' + innerStr1 + innerStr2 + '</div>';
         // this.canvas = $('<div id="myCanvasAll" class="image-annotate-canvas"><div class="image-annotate-view"></div><div class="image-annotate-edit"><div class="image-annotate-edit-area"></div></div></div>');
-        this.canvas = $(totalStr);
+        this.parentCanvas = $(totalStr);
+        this.canvas = this.parentCanvas.children().first();
         this.canvas.children('.image-annotate-edit').hide();
         this.canvas.children('.image-annotate-view').hide();
-        this.image.after(this.canvas);
-
+        // this.image.after(this.canvas);
+        // this.image.after(this.parentCanvas);
+        this.image.after(this.parentCanvas);
 
         this.canvas.height(this.height());
         this.canvas.width(this.width());
         //this.canvas.css('background-size','100% 100%');
-        this.canvas.css('background-image', 'url("' + this.attr('src') + '")');
+        $('#drawCanvas').css('background-repeat', 'no-repeat');
+        $('#drawCanvas').css('background-image', 'url("' + this.attr('src') + '")');
+
+        var img = new Image();
+        img.src = this.attr('src');
+        // alert(img.height);
+        // alert(img.width);
+        originImageWidth = img.width;
+        originImageHeight = img.height;
+        // this.canvas.css('background-image', 'url("' + this.attr('src') + '")');
         this.canvas.children('.image-annotate-view, .image-annotate-edit').height(this.height());
         this.canvas.children('.image-annotate-view, .image-annotate-edit').width(this.width());
 
@@ -90,7 +143,7 @@
             $(this).children('.image-annotate-view').show();
 
         }, function() {
-            $(this).children('.image-annotate-view').hide();
+           $(this).children('.image-annotate-view').hide();
         });
 
 
@@ -107,11 +160,46 @@
             $.fn.annotateImage.load(this);
         }
 
+        // $.fn.drawLines(parseInt(filterId));
+        var html5Canvas = $('#drawCanvas');
+        var canvasDiv = $('#overlay');
+        if (html5Canvas.length > 0) {
+            html5Canvas[0].width = originImageWidth;
+            html5Canvas[0].height = originImageHeight;
 
-
+        }
         this.hide();
         return this;
     }
+    $.fn.firstDrawLines = function (filterId) {
+        var groupId = filterId;
+        $.fn.readjustHTML5CanvasHeight();
+        var tmpr = $.fn.annotateImage.defaults['cicleRadius'];
+        // var originNotes = originInNotes["bodies"][filterId]["joints"];
+        for (var idx in limbSeq) {
+            var a = parseInt(limbSeq[idx][0]) - 1;
+            var b = parseInt(limbSeq[idx][1]) - 1;
+            var aId = groupId + "_" + a;
+            var bId = groupId + "_" + b;
+            var ax = nodePosition[aId][1] + originImageLeft + tmpr;
+            var ay = nodePosition[aId][0] + originImageTop + tmpr;
+            var bx = nodePosition[bId][1] + originImageLeft + tmpr;
+            var by = nodePosition[bId][0] + originImageTop + tmpr;
+            // var ax = originNotes[a * 3 + 0] + originImageLeft + tmpr;
+            // var ay = originNotes[a * 3 + 1] + originImageLeft + tmpr;
+            // var az = originNotes[a * 3 + 2] + originImageLeft + tmpr;
+            //
+            // var bx = originNotes[b * 3 + 0] + originImageLeft + tmpr;
+            // var by = originNotes[b * 3 + 1] + originImageLeft + tmpr;
+            // var bz = originNotes[b * 3 + 2] + originImageLeft + tmpr;
+            if (!nodeDisable[aId] && !nodeDisable[bId]) {
+                $.fn.drawLineBetweenElements($('#myCanvas' + aId), $('#myCanvas' + bId),colors[Math.min(colors.length - 1,idx)],1,ax,ay,bx,by);
+                // alert($('#myCanvas' + aId).offset().left);aId
+            }
+
+        }
+    }
+
     $.fn.drawLines = function (groupId) {
         // var points = new Array(totalPoints);
         // for (var idx in note) {
@@ -123,19 +211,25 @@
         //     points[parseInt(partId)]['left'] = left;
         //     points[parseInt(partId)]['top'] = top;
         // }
+        $.fn.readjustHTML5CanvasHeight();
 
         for (var idx in limbSeq) {
             var a = parseInt(limbSeq[idx][0]) - 1;
             var b = parseInt(limbSeq[idx][1]) - 1;
             var aId = groupId + "_" + a;
             var bId = groupId + "_" + b;
-            $.fn.drawLineBetweenElements($('#myCanvasAreaDiv' + aId),$('#myCanvasAreaDiv' + bId));
+            if (!nodeDisable[aId] && !nodeDisable[bId]) {
+                $.fn.drawLineBetweenElements($('#myCanvas' + aId), $('#myCanvas' + bId),colors[Math.min(colors.length - 1,idx)],0,0,0,0,0);
+                // alert($('#myCanvas' + aId).offset().left);aId
+            }
+
         }
 
     }
 
     $.fn.annotateImage.removeCanvas = function() {
-        $('#myCanvasAll').remove();
+        // $('#myCanvasAll').remove();
+        $('#canvas-wrap').remove();
     }
 
     $.fn.annotateImage.defaults = {
@@ -153,13 +247,16 @@
     $.fn.annotateImage.getAnnotations = function() {
         tmpresultNotes = $.fn.clone(resultNotes);
         for (var idx in tmpresultNotes) {
-            tmpresultNotes[idx]['top'] = parseFloat(tmpresultNotes[idx]['top']) + $.fn.annotateImage.defaults['cicleRadius'];
-            tmpresultNotes[idx]['left'] = parseFloat(tmpresultNotes[idx]['left']) + $.fn.annotateImage.defaults['cicleRadius'];
+            tmpresultNotes[idx]['top'] = Math.max(0,parseFloat(tmpresultNotes[idx]['top']));// + parseFloat($.fn.annotateImage.defaults['cicleRadius']);
+            tmpresultNotes[idx]['left'] = Math.max(0,parseFloat(tmpresultNotes[idx]['left'])) ;//+ parseFloat($.fn.annotateImage.defaults['cicleRadius']);
+            //
+            // tmpresultNotes[idx]['top'] = parseFloat(tmpresultNotes[idx]['top']);
+            // tmpresultNotes[idx]['left'] = parseFloat(tmpresultNotes[idx]['left']);
         }
         var jsonAnnotations = JSON.stringify(tmpresultNotes);
-
+        console.log(jsonAnnotations);
         return jsonAnnotations;
-        //console.log(jsonAnnotations);
+
     }
     $.fn.annotateImage.clear = function(image) {
         for (var i = 0; i < image.memory.length; i++) {
@@ -169,6 +266,7 @@
     };
 
     $.fn.annotateImage.reload = function() {
+        $.fn.readjustHTML5CanvasHeight();
         return $.fn.annotateImage.load(imageTmpVar);
     }
 
@@ -189,7 +287,7 @@
             }
         }
         if (addNew) {
-            // $.fn.drawLines(parseInt(filterId));
+
         }
 
         return addNew;
@@ -201,16 +299,17 @@
         this.image = image;
         this.note = note;
         this.editable = false;
-        console.log(note.id);
+        // console.log(note.id);
 
-        this.area = $('<div id="myCanvasAreaDiv' + note.id + '" class="image-annotate-area' + (this.editable ? ' image-annotate-area-editable' : '') + '"><div><canvas class="labedCircle" id="myCanvas' + note.id + '" width="' + (this.r * 2) + '" height="' + (this.r * 2) + '"></canvas></div></div>');
+        this.area = $('<div id="myCanvasAreaDiv' + note.id + '" class="image-annotate-area' + (this.editable ? ' image-annotate-area-editable' : '') + '"><div id="myCanvasAreaDivGo' + note.id + '"><canvas class="labedCircle" id="myCanvas' + note.id + '" width="' + (this.r * 2) + '" height="' + (this.r * 2) + '"></canvas></div></div>');
 
-        image.canvas.children('.image-annotate-view').prepend(this.area);
-        console.log(this.area);
+        //image.canvas.children('.image-annotate-view').append(this.area);
+         image.canvas.children('.image-annotate-view').prepend(this.area);
+        // console.log(this.area);
 
         var c = document.getElementById('myCanvas' + note.id);
-        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-        console.log(note);
+        // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        // console.log(note);
         var noteId = parseInt(note.partId);
         var noteColor = "" + colors[noteId][0] + "," + colors[noteId][1] + "," + colors[noteId][2];
         var cxt = c.getContext("2d");
@@ -238,7 +337,7 @@
         });
 
         this.setDrawable();
-
+        // $.fn.drawLines(parseInt(filterId));
         return this;
     }
 
@@ -252,24 +351,30 @@
         var note = this.note;
         var tmpc = $('#' + 'myCanvas' + this.note.id);
 
+
         area.draggable({
             containment: image.canvas,
             //containment: tmpc,
             drag: function(e, ui) {
                 form.css('left', (parseFloat(area.offset().left) - originImageLeft) + 'px');
-                form.css('top', (parseFloat(area.offset().top) - originImageTop + parseInt(area.height()) + 7) + 'px');
+                form.css('top', (parseFloat(area.offset().top) -  originImageTop + parseInt(area.height()) + 7) + 'px');
+                $.fn.drawLines(parseInt(filterId));
             },
             stop: function(e, ui) {
                 form.css('left', (parseFloat(area.offset().left) - originImageLeft) + 'px');
                 form.css('top', (parseFloat(area.offset().top) - originImageTop + parseFloat(area.height()) + 7) + 'px');
-                //resultNotes[note["idxInArr"]]['left'] = parseInt(tmpc.offset().left) - originImageLeft + tmpr;
-                //resultNotes[note["idxInArr"]]['top'] = parseInt(tmpc.offset().top) - originImageTop + tmpr;
+                resultNotes[note["idxInArr"]]['left'] = parseInt(tmpc.offset().left) - originImageLeft + tmpr;
+                resultNotes[note["idxInArr"]]['top'] = parseInt(tmpc.offset().top) - originImageTop + tmpr;
 
-                resultNotes[note["idxInArr"]]['left'] = parseFloat(tmpc.offset().left) - originImageLeft + tmpr;
-                resultNotes[note["idxInArr"]]['top'] = parseFloat(tmpc.offset().top) - originImageTop + tmpr;
-                console.log(area.offset());
+                //resultNotes[note["idxInArr"]]['left'] = parseFloat(tmpc.offset().left) - $('#overlay').offsetLeft + tmpr;
+                //resultNotes[note["idxInArr"]]['top'] = parseFloat(tmpc.offset().top) - $('#overlay').offsetTop + tmpr;
+                //
+                // resultNotes[note["idxInArr"]]['left'] = parseFloat(tmpc.offset().left) - parseFloat($('#overlay').offsetLeft);
+                // resultNotes[note["idxInArr"]]['top'] = parseFloat(tmpc.offset().top) - parseFloat($('#overlay').offsetTop);
+                 console.log(area.offset());
                 var x = JSON.stringify(resultNotes);
-                console.log(x);
+                // console.log(x);
+
             }
         });
     }
@@ -346,7 +451,7 @@
         throw new Error("Unable to copy obj! Its type isn't supported.");
     };
 
-    $.fn.drawLineBetweenElements = function (sourceElement, targetElement) {
+    $.fn.drawLineBetweenElements = function (sourceElement, targetElement,color,type,sx,sy,tx,ty) {
 
         //draw from/to the centre, not the top left
         //don't use .position()
@@ -357,23 +462,63 @@
         var targetX = targetElement.offset().left + sourceElement.width() / 2;
         var targetY = targetElement.offset().top + sourceElement.height() / 2;
 
-        var canvas = $('#myCanvasAll');
+
+        var canvas = $('#drawCanvas');
+        // alert(sourceX);
+        // alert(sourceY);
 
         //you need to draw relative to the canvas not the page
         var canvasOffsetX = canvas.offset().left;
         var canvasOffsetY = canvas.offset().top;
 
         var context = canvas[0].getContext('2d');
+        if (parseInt(type) == 1) {
+            sourceX = sx;
+            sourceY = sy;
+            targetX = tx;
+            targetY = ty;
+        }
 
         //draw line
         context.beginPath();
         context.moveTo(sourceX - canvasOffsetX, sourceY - canvasOffsetY);
         context.lineTo(targetX - canvasOffsetX, targetY - canvasOffsetY);
+        // context.moveTo(10, 100);
+        // context.lineTo(300, 100);
         context.closePath();
         //ink line
         context.lineWidth = 2;
-        context.strokeStyle = "#000"; //black
+        var noteColor = "" + color[0] + "," + color[1] + "," + color[2];
+        context.strokeStyle = 'rgb(' + noteColor + ')'; //black
         context.stroke();
-    }
+    };
+
+    $.fn.readjustHTML5CanvasHeight= function () {
+        //clear the canvas by readjusting the width/height
+        var html5Canvas = $('#drawCanvas');
+        var canvasDiv = $('#overlay');
+
+        if (html5Canvas.length > 0) {
+            html5Canvas[0].width = canvasDiv.width();
+            html5Canvas[0].height = canvasDiv.height();
+
+        }
+    };
+
+
 
 })(jQuery);
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -7,7 +7,7 @@ use App\Image;
 class ImageController extends Controller
 {
     public function init() {
-        $myfile = fopen(asset("caffe_rtpose" . DIRECTORY_SEPARATOR . "filenames.txt"), "r") or die("Unable to open file!");
+            $myfile = fopen(asset("caffe_rtpose" . DIRECTORY_SEPARATOR . "filenames.txt"), "r") or die("Unable to open file!");
         // 输出单行直到 end-of-file
 
         while(!feof($myfile)) {
@@ -35,18 +35,34 @@ class ImageController extends Controller
     }
 
     public function getData(\Illuminate\Http\Request $request) {
-
+//        if(isEmpty(Image::all())) {
+//            alert("没有图片了。");
+//            return response()->json([
+//                'ok' => 0
+//            ]);
+//        }
         $imageJson = Image::first();
+        if ($imageJson) {}
+        else {
+            return response()->json([
+                'id' => null,
+                'imagePath' => null,
+                'noteJson' => null,
+                'ok' => 0
+            ]);
+        }
+
         $str = trim($imageJson->filename);
+//        $str = "000199214.jpg";
         $path_parts = pathinfo($str)['filename'];
 
         $notejson = file_get_contents(asset('caffe_rtpose' . '/' . 'input_json' . '/' . $path_parts . '.json'));
         $imagepath = 'caffe_rtpose' . '/' . 'input' . '/' . $path_parts . '.jpg';
-
       return response()->json([
             'id' => $imageJson->id,
             'imagePath' => $imagepath,
-            'noteJson' => $notejson
+            'noteJson' => $notejson,
+            'ok' => 1
         ]);
 //        return response()->json(['response' => 'This is post method']);
     }
@@ -57,7 +73,9 @@ class ImageController extends Controller
             $image = Image::find($id);
             if ($image) {
                 if($image->delete()) {
-
+                    if(Image::count() == 0) {
+                        alert("没有图片了。");
+                    }
                 }
 
                 $str = trim($image->filename);
@@ -65,9 +83,15 @@ class ImageController extends Controller
 
                 if ($request->has('data')) {
                     $data = $request->input('data');
-                    $myfile = fopen($path_parts. ".json", "w") or die("Unable to open file!");
+                    $path = "./caffe_rtpose/myoutput_json/";
+                    if (!file_exists($path)) {
+                        mkdir($path, 0755);
+                    }
 
-                    fwrite($myfile,json_encode($data));
+                    $myfile = fopen($path . $path_parts. ".json", "w") or die("Unable to open file!");
+
+                    fwrite($myfile,$data);
+  //                  fwrite($myfile,json_encode($data));
                     fclose($myfile);
                 }
             }
