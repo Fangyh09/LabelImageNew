@@ -9,6 +9,10 @@
     <style type="text/css" media="all">
         @import "{{asset('static/css/annotation.css')}}";
     </style>
+    <style type="text/css">
+        #canvas-wrap { position:relative } /* Make this a positioned parent */
+        #overlay     { position:absolute; top:0px; left:0px; }
+    </style>
     <script type="text/javascript" src="{{asset('static/js/jquery.js')}}"></script>
     <script type="text/javascript" src="{{asset('static/js/jquery-ui.min.js')}}"></script>
     <script type="text/javascript" src="{{asset('static/js/jquery.annotate.js')}}"></script>

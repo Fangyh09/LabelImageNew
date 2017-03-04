@@ -1,17 +1,22 @@
 (function($) {
     ///resultNotes is the result Annotations
-    resultNotes = {}
+    resultNotes = {};
     ///to store the origin picture top & left
-    originImageTop = 0
-    originImageLeft = 0
+    originImageTop = 0;
+    originImageLeft = 0;
     /// to show to annotations with specific person whose id is filterId
-    filterId = 0
+    filterId = 0;
     ///to image node itself, need to improve...
-    imageTmpVar = {}
-
+    imageTmpVar = {};
+    const totalPoints = 18;
+    outerCanvas = null;
     colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
         [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
-        [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
+        [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]];
+
+    limbSeq = [[2,3], [2,6], [3,4], [4,5], [6,7], [7,8], [2,9], [9,10],
+           [10,11], [2,12], [12,13], [13,14], [2,1], [1,15], [15,17],
+           [1,16], [16,18], [3,17], [6,18]];
     $.fn.annotateImage = function(options) {
         var opts = $.extend({}, $.fn.annotateImage.defaults, options);
         var image = this;
@@ -64,7 +69,11 @@
         var x = JSON.stringify(resultNotes);
         console.log(x);
 
-        this.canvas = $('<div id="myCanvasAll" class="image-annotate-canvas"><div class="image-annotate-view"></div><div class="image-annotate-edit"><div class="image-annotate-edit-area"></div></div></div>');
+
+        var innerStr = '<div id="overlay" class="image-annotate-canvas"><div class="image-annotate-view"></div><div class="image-annotate-edit"><div class="image-annotate-edit-area"></div></div></div>';
+        var totalStr = '<div id="canvas-wrap"><canvas width="800" height="600"></canvas>' + innerStr + '</div>';
+        // this.canvas = $('<div id="myCanvasAll" class="image-annotate-canvas"><div class="image-annotate-view"></div><div class="image-annotate-edit"><div class="image-annotate-edit-area"></div></div></div>');
+        this.canvas = $(totalStr);
         this.canvas.children('.image-annotate-edit').hide();
         this.canvas.children('.image-annotate-view').hide();
         this.image.after(this.canvas);
@@ -98,8 +107,31 @@
             $.fn.annotateImage.load(this);
         }
 
+
+
         this.hide();
         return this;
+    }
+    $.fn.drawLines = function (groupId) {
+        // var points = new Array(totalPoints);
+        // for (var idx in note) {
+        //     var left = totalPoints['left'];
+        //     var top = totalPoints['top'];
+        //     //var groupId = totalPoints['groupId'];
+        //     var partId = totalPoints['partId'];
+        //     points[parseInt(partId)] = {};
+        //     points[parseInt(partId)]['left'] = left;
+        //     points[parseInt(partId)]['top'] = top;
+        // }
+
+        for (var idx in limbSeq) {
+            var a = parseInt(limbSeq[idx][0]) - 1;
+            var b = parseInt(limbSeq[idx][1]) - 1;
+            var aId = groupId + "_" + a;
+            var bId = groupId + "_" + b;
+            $.fn.drawLineBetweenElements($('#myCanvasAreaDiv' + aId),$('#myCanvasAreaDiv' + bId));
+        }
+
     }
 
     $.fn.annotateImage.removeCanvas = function() {
@@ -156,6 +188,10 @@
                 addNew = true;
             }
         }
+        if (addNew) {
+            // $.fn.drawLines(parseInt(filterId));
+        }
+
         return addNew;
     }
 
@@ -167,7 +203,7 @@
         this.editable = false;
         console.log(note.id);
 
-        this.area = $('<div class="image-annotate-area' + (this.editable ? ' image-annotate-area-editable' : '') + '"><div><canvas class="labedCircle" id="myCanvas' + note.id + '" width="' + (this.r * 2) + '" height="' + (this.r * 2) + '"></canvas></div></div>');
+        this.area = $('<div id="myCanvasAreaDiv' + note.id + '" class="image-annotate-area' + (this.editable ? ' image-annotate-area-editable' : '') + '"><div><canvas class="labedCircle" id="myCanvas' + note.id + '" width="' + (this.r * 2) + '" height="' + (this.r * 2) + '"></canvas></div></div>');
 
         image.canvas.children('.image-annotate-view').prepend(this.area);
         console.log(this.area);
@@ -202,6 +238,7 @@
         });
 
         this.setDrawable();
+
         return this;
     }
 
@@ -274,7 +311,7 @@
         /// </summary>      
         this.area.remove();
         this.form.remove();
-    }
+    };
     $.fn.clone = function (obj) {
         var copy;
 
@@ -307,6 +344,36 @@
         }
 
         throw new Error("Unable to copy obj! Its type isn't supported.");
+    };
+
+    $.fn.drawLineBetweenElements = function (sourceElement, targetElement) {
+
+        //draw from/to the centre, not the top left
+        //don't use .position()
+        //that will be relative to the parent div and not the page
+        var sourceX = sourceElement.offset().left + sourceElement.width() / 2;
+        var sourceY = sourceElement.offset().top + sourceElement.height() / 2;
+
+        var targetX = targetElement.offset().left + sourceElement.width() / 2;
+        var targetY = targetElement.offset().top + sourceElement.height() / 2;
+
+        var canvas = $('#myCanvasAll');
+
+        //you need to draw relative to the canvas not the page
+        var canvasOffsetX = canvas.offset().left;
+        var canvasOffsetY = canvas.offset().top;
+
+        var context = canvas[0].getContext('2d');
+
+        //draw line
+        context.beginPath();
+        context.moveTo(sourceX - canvasOffsetX, sourceY - canvasOffsetY);
+        context.lineTo(targetX - canvasOffsetX, targetY - canvasOffsetY);
+        context.closePath();
+        //ink line
+        context.lineWidth = 2;
+        context.strokeStyle = "#000"; //black
+        context.stroke();
     }
 
 })(jQuery);
