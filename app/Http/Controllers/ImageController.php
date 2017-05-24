@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Request;
 use App\Image;
 
 class ImageController extends Controller
@@ -24,10 +25,21 @@ class ImageController extends Controller
         fclose($myfile);
     }
 
-    public  function test() {
-        $str = "1201.json";
-        $path_parts = pathinfo($str);
-        echo $path_parts['filename'];
+    public  function test(Request $request) {
+        $name = "null";
+        $pwd = "null";
+        if ($request->has("username")) {
+            $name = $request->get("username");
+        }
+        if ($request->has("password")) {
+            $pwd = $request->get("password");
+        }
+        info($name);
+        info($pwd);
+
+//        $str = "1201.json";
+//        $path_parts = pathinfo($str);
+//        echo $path_parts['filename'];
     }
 
     public function index() {

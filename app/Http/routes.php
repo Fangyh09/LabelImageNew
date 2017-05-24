@@ -27,6 +27,8 @@ Route::get('show', function () {
     echo ("1111111111");
 });
 
+
+
 Route::any('test', ['uses' => 'ImageController@test']);
 
 Route::any('getData', ['uses' => 'ImageController@getData']);
