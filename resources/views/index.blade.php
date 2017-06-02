@@ -19,7 +19,7 @@
     <script type="text/javascript" src="{{asset('static/js/jquery.annotate.js')}}"></script>
     <script type="text/javascript" src="{{asset('static/js/bootstrap.min.js')}}"></script>
     <script language="javascript">
-        var basePath = "http://localhost/LabelImagePhp/public/";
+        var basePath = "http://202.121.182.216:20013/";
         filterId = 0;
         //offset changed, so temp solution.
         var outerTop = 0;
@@ -91,14 +91,14 @@
         nextPicture = function () {
 
             $.ajax({
-                url: "http://localhost/LabelImagePhp/public/delData",
+                url: "http://202.121.182.216:20013/delData",
                 type: "post",
                 data: {
                     id: imageDbId,
                     data: print()
                 }
             }).then(function() {
-                $.getJSON( "http://localhost/LabelImagePhp/public/getData", function( data ) {
+                $.getJSON( "http://202.121.182.216:20013/getData", function( data ) {
                     var ok = data['ok'];
                     if (parseInt(ok) == 0) {
                         alert("图片加载完毕。");

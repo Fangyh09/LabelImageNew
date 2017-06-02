@@ -173,7 +173,9 @@
     }
     $.fn.firstDrawLines = function (filterId) {
         var groupId = filterId;
+        console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
         $.fn.readjustHTML5CanvasHeight();
+
         var tmpr = $.fn.annotateImage.defaults['cicleRadius'];
         // var originNotes = originInNotes["bodies"][filterId]["joints"];
         for (var idx in limbSeq) {
@@ -503,6 +505,8 @@
             html5Canvas[0].height = canvasDiv.height();
 
         }
+        console.log("width:" + html5Canvas[0].width);
+        console.log("height:" + html5Canvas[0].height);
     };
 
 

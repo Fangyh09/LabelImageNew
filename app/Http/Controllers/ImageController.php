@@ -7,7 +7,11 @@ use App\Image;
 class ImageController extends Controller
 {
     public function init() {
-            $myfile = fopen(asset("caffe_rtpose" . DIRECTORY_SEPARATOR . "filenames.txt"), "r") or die("Unable to open file!");
+        echo ("111");
+        var_dump("111");
+           $myfile = fopen(public_path("caffe_rtpose" . DIRECTORY_SEPARATOR . "filenames.txt"), "r") ; //or die("Unable to open file!");
+           var_dump($myfile);
+
         // 输出单行直到 end-of-file
 
         while(!feof($myfile)) {
@@ -56,7 +60,7 @@ class ImageController extends Controller
 //        $str = "000199214.jpg";
         $path_parts = pathinfo($str)['filename'];
 
-        $notejson = file_get_contents(asset('caffe_rtpose' . '/' . 'input_json' . '/' . $path_parts . '.json'));
+        $notejson = file_get_contents(public_path('caffe_rtpose' . '/' . 'input_json' . '/' . $path_parts . '.json'));
         $imagepath = 'caffe_rtpose' . '/' . 'input' . '/' . $path_parts . '.jpg';
       return response()->json([
             'id' => $imageJson->id,
