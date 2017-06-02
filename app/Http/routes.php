@@ -77,6 +77,10 @@ Route::group(['middleware' => ['cors']], function () {
 
     Route::any('labelimage', ['uses' => 'ImageController@index']);
     Route::any('init', ['uses' => 'ImageController@init']);
+
+    Route::get('getIP', ['uses' => 'ImageController@getIP']);
+    Route::post('alarm', ['uses' => 'ImageController@alarm']);
+
 });
 
 Route::auth();

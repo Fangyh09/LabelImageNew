@@ -6,6 +6,67 @@ use App\Image;
 
 class ImageController extends Controller
 {
+    public function getIP() {
+        dd($_SERVER['SERVER_ADDR']);
+    }
+
+    public function copyfiles($file1,$file2){
+        $contentx = file_get_contents($file1);
+        $openedfile = fopen($file2, "w");
+        fwrite($openedfile, $contentx);
+        fclose($openedfile);
+        if ($contentx === FALSE) {
+            $status=false;
+        }else $status=true;
+        return $status;
+    }
+    public function alarm(\Illuminate\Http\Request $request) {
+        if ($request->has('id')) {
+            $id = $request->input('id');
+            $image = Image::find($id);
+            if ($image) {
+                if($image->delete()) {
+//                    if(Image::count() == 0) {
+//                        alert("没有图片了。");
+//                    }
+                }
+
+                $str = trim($image->filename);
+                $path_parts = pathinfo($str)['filename'];
+
+                //if ($request->has('data')) {
+                  //  $data = $request->input('data');
+                    $alarmJsonPath = "./caffe_rtpose/alarm_json/";
+                    $alarmPicPath = "./caffe_rtpose/alarm_pic/";
+                    $inputPath = "./caffe_rtpose/input/";
+                    $inputJsonPath = "./caffe_rtpose/input_json/";
+                    if (!file_exists($alarmJsonPath)) {
+                        mkdir($alarmJsonPath, 0755);
+                    }
+
+                    if (!file_exists($alarmPicPath)) {
+                        mkdir($alarmPicPath, 0755);
+                    }
+                     $this->copyfiles($inputJsonPath . $path_parts. ".json",$alarmJsonPath . $path_parts. ".json");
+                     $this->copyfiles($inputPath . $path_parts. ".jpg",$alarmPicPath . $path_parts. ".jpg");
+//                    $myfileJson = fopen($alarmJsonPath . $path_parts. ".json", "w") or die("Unable to open file!");
+//                    $myfilePic = fopen($alarmPicPath . $path_parts. ".jpg", "w") or die("Unable to open file!");
+//
+//                    $data = fread($inputPath . $path_parts. ".jpg", "r");
+//                    fwrite($myfilePic,$data);
+//
+//                    $data = fread($inputJsonPath . $path_parts. ".json", "r");
+//                    fwrite($myfileJson,$data);
+//
+//                    //                  fwrite($myfile,json_encode($data));
+//                    fclose($myfileJson);
+//                    fclose($myfilePic);
+                //}
+            }
+        }
+    }
+
+
     public function init() {
         echo ("111");
         var_dump("111");

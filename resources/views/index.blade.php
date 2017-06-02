@@ -19,6 +19,8 @@
     <script type="text/javascript" src="{{asset('static/js/jquery.annotate.js')}}"></script>
     <script type="text/javascript" src="{{asset('static/js/bootstrap.min.js')}}"></script>
     <script language="javascript">
+        var simple = '<?php echo $_SERVER['SERVER_ADDR']; ?>';
+
         var basePath = "http://202.121.182.216:20013/";
         filterId = 0;
         //offset changed, so temp solution.
@@ -86,19 +88,48 @@
 //            console.log($.fn.annotateImage.getAnnotations());
         }
 
+        alarm = function() {
+
+            $.ajax({
+                url: basePath + "alarm",
+                type: "post",
+                data: {
+                    id: imageDbId
+                }
+            }).then(function() {
+                $.getJSON( basePath + "getData", function( data ) {
+                    var ok = data['ok'];
+                    if (parseInt(ok) == 0) {
+                        alert("图片加载完毕。");
+                        return;
+                    }
+                    var imagePath = data['imagePath'];
+                    console.log(data['noteJson']);
+                    originNotes = data['noteJson'];
+                    imageDbId = data['id'];
+                    var noteJson = jsonWrapper(data['noteJson']);
+//                var modifiedNoteJson = jsonWrapper(noteJson);
+//                console.log(modifiedNoteJson);
+//                    console.log(noteJson);
+                    nextPictureWithPara(imagePath, noteJson);
+                });
+
+            });
+
+        }
 
 
         nextPicture = function () {
 
             $.ajax({
-                url: "http://202.121.182.216:20013/delData",
+                url: basePath + "delData",
                 type: "post",
                 data: {
                     id: imageDbId,
                     data: print()
                 }
             }).then(function() {
-                $.getJSON( "http://202.121.182.216:20013/getData", function( data ) {
+                $.getJSON( basePath + "getData", function( data ) {
                     var ok = data['ok'];
                     if (parseInt(ok) == 0) {
                         alert("图片加载完毕。");
@@ -239,6 +270,9 @@
                         onclick="nextPicture()">Ok
                 </button>
                 <button class="btn btn-primary btn-sm" href="#" role="button" onclick="print()">Print</button>
+
+                <button class="btn btn-danger btn-sm" href="#" role="button" onclick="alarm()">Alarm</button>
+
             </p>
         {{--</div>--}}
     </div>
