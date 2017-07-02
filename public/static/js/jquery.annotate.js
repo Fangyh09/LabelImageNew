@@ -31,10 +31,6 @@
         [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
         [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85], [0, 0, 0], [0, 0, 0]];
 
-    // var limbSeq = [[2,3], [2,6], [3,4], [4,5], [6,7], [7,8], [2,9], [9,10],
-    //     [10,11], [2,12], [12,13], [13,14], [2,1], [1,15], [15,17],
-    //     [1,16], [16,18], [3,17], [6,18]];
-
     var limbSeq = [[2, 3], [2, 6], [3, 4], [4, 5], [6, 7], [7, 8], [2, 9], [9, 10],
         [10, 11], [2, 12], [12, 13], [13, 14], [2, 1], [1, 15], [15, 17],
         [1, 16], [16, 18]];
@@ -336,11 +332,6 @@
 
             $('#drawCanvas').css('background-repeat', 'no-repeat');
             $('#drawCanvas').css('background-image', 'url("' + image.src + '")');
-
-            // var canvas = document.getElementById("drawCanvas");
-            // var context = canvas.getContext("2d");
-            // context.drawImage(image, 0, 0);
-            // context.drawImage(image, 0, 0);
             environment.hide();
 
             $.fn.labelImage.loadJoint(parseInt(filterId));
@@ -608,7 +599,6 @@
                     //update personArr
                     environment.personArr[filterId][partId].left = bodies[filterId]['joints'][partId * 3];
                     environment.personArr[filterId][partId].top = bodies[filterId]['joints'][partId * 3 + 1];
-                    //environment.personArr[filterId][partId].isZero = parseInt(environment.personArr[filterId][partId].left) == 0 && parseInt(nvironment.personArr[filterId][partId].top) == 0;
 
                     console.log("point:" + bodies[filterId]['joints'][partId * 3] + "-" + bodies[filterId]['joints'][partId * 3 + 1]);
                 }
@@ -619,17 +609,12 @@
 
     $.fn.deletePerson = function () {
         if (parseInt(filterId) < parseInt(environment.personArr.length)) {
-            //console.log(resultNotes['bodies']);
-            //console.log(environment.personArr);
+     
             if (filterId > -1) {
                 resultNotes['bodies'].splice(filterId, 1);
                 environment.personArr.splice(filterId, 1);
             }
-            //console.log(resultNotes['bodies']);
-            //console.log(environment.personArr);
-
-            // delete resultNotes['bodies'][filterId];
-            // delete environment.personArr[filterId];
+    
 
             if (environment.personArr.length > 0) {
                 if (parseInt(filterId) >= parseInt(environment.personArr.length)) {
@@ -668,26 +653,7 @@
                 var aId = environment.personArr[groupId][a].textId;
                 var bId = environment.personArr[groupId][b].textId;
 
-                // //update visible status
-                // var bodies = resultNotes['bodies'];
-                // if ($.fn.checkPointInCanvas(environment.personArr[groupId][a].left, environment.personArr[groupId][a].top)) {
-                //     bodies[filterId]['joints'][a * 3 + 2] = Math.max(1, parseInt(bodies[filterId]['joints'][a * 3 + 2]));
-                //     environment.personArr[filterId][a].visible = Math.max(1, parseInt(bodies[filterId]['joints'][a * 3 + 2]));
-                // }
-                // else {
-                //     bodies[filterId]['joints'][a * 3 + 2] = 0;
-                //     environment.personArr[filterId][a].visible = 0;
-                // }
-                //
-                // if ($.fn.checkPointInCanvas(environment.personArr[groupId][b].left, environment.personArr[groupId][b].top)) {
-                //     bodies[filterId]['joints'][b * 3 + 2] = Math.max(1, parseInt(bodies[filterId]['joints'][b * 3 + 2]));
-                //     environment.personArr[filterId][b].visible = Math.max(1, parseInt(bodies[filterId]['joints'][b * 3 + 2]));
-                // }
-                // else {
-                //     bodies[filterId]['joints'][b * 3 + 2] = 0;
-                //     environment.personArr[filterId][b].visible = 0;
-                // }
-
+    
 
                 if ($.fn.checkPointInCanvas(environment.personArr[groupId][a].left, environment.personArr[groupId][a].top) &&
                     $.fn.checkPointInCanvas(environment.personArr[groupId][b].left, environment.personArr[groupId][b].top)) {
