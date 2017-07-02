@@ -1,3 +1,3 @@
 # LabelImage
-## download packages
+## install packages
 composer update --no-scripts
