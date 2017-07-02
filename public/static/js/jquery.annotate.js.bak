@@ -22,8 +22,7 @@
 
     var resultNotes;
     var image = new Image();
-    // var enviroment
-    environment = new Object();
+    var environment = new Object();
     var debug = true;
     var filterId = 0;
 
@@ -44,25 +43,22 @@
         [212.5, 0, 127.5], [212.5, 0, 212.5], [255, 0, 127.5], [255, 0, 170], [255, 85, 85], [170, 127.5, 42.5]];
 
 
-    var jointNameOld = [
+    var jointName = [
         "Nose",
         "Neck",
         "RShoulder",
         "RElbow",
         "RWrist",
-
         "LShoulder",
         "LElbow",
         "LWrist",
         "RHip",
         "RKnee",
-
         "RAnkle",
         "LHip",
         "LKnee",
         "LAnkle",
         "REye",
-
         "LEye",
         "REar",
         "LEar",
@@ -70,57 +66,8 @@
         "bbox"
     ];
 
-    var jointName = [
-        "鼻子",
-        "颈部",
-        "右肩",
-        "右手肘",
-        "右手腕",
-
-        "左肩",
-        "左手肘",
-        "左手腕",
-        "右臀",
-        "右膝盖",
-
-        "右脚踝",
-        "左臀",
-        "左膝盖",
-        "左脚踝",
-        "右眼",
-
-        "左眼",
-        "右耳",
-        "左耳",
-        "bbox",
-        "bbox"
-    ];
-
 
     var personTemplate = [140.553,44.3634,1,132.702,76.9427,1,97.6008,78.2369,1,78.1039,129.159,1,88.3636474609375,142.72727966308594,1,170.392,75.6219,1,178.3636474609375,104.72727966308594,1,176.3636474609375,141.72727966308594,1,117.063,169.527,1,92.3532,204.816,1,101.489,255.657,1,158.705,166.958,1,150.3636474609375,201.72727966308594,1,163.3636474609375,258.72727966308594,1,134,36.5294,1,147.3636474609375,33.72727966308594,1,119.653,37.8165,1,157.3636474609375,45.72727966308594,1];
-    var unifyPersonTemplate = {
-        "joints":[63.4491,11.636120336914061,1,
-                  55.5981,44.215420336914065,1,20.49690000000001,
-            45.50962033691407,1,1,96.43172033691405,1,
-            11.259747460937504,110,1,
-            93.2881,42.89462033691406,1,
-
-            101.2597474609375,72,1,
-            99.2597474609375,109,1,
-            39.95910000000001,136.79972033691405,1,
-            15.249300000000005,172.08872033691407,1,
-            24.38510000000001,222.92972033691407,1,
-
-            81.60110000000002,134.23072033691406,1,
-            73.2597474609375,169,1,
-            86.2597474609375,226,1,
-            56.896100000000004,3.802120336914065,1,
-            70.2597474609375,1,1,
-
-            42.54910000000001,5.08922033691406,1,
-            80.2597474609375, 13,1,
-            5,70,1]
-    };
 
     $.fn.getResultNote = function () {
         var bodies = resultNotes['bodies'];
@@ -131,56 +78,87 @@
                     bodies[idx]['joints'][jdx] = bodies[idx]['joints'][jdx + 1] = 0;
                 }
             }
+            //pop last 6 number
+            //for use 54
+            //fangyh
+            while (bodies[idx]['joints'].length > 54) {
+                bodies[idx]['joints'].pop();
+            }
         }
 
+        //$.fn.updateBBOX();
+        for (var idx in bodies) {
+            bodies[idx]["bbox"] = [];
+            var id1 = environment.bboxPartId1;
+            var id2 = environment.bboxPartId2;
+            var sourceX = environment.personArr[idx][id1].left;
+            var sourceY = environment.personArr[idx][id1].top;
+            var targetX = environment.personArr[idx][id2].left;
+            var targetY = environment.personArr[idx][id2].top;
 
+            var minX = Math.min(sourceX, targetX);
+            var minY = Math.min(sourceY, targetY);
+            var maxX = Math.max(sourceX, targetX);
+            var maxY = Math.max(sourceY, targetY);
+            bodies[idx]['bbox'].push(minX);
+            bodies[idx]['bbox'].push(minY);
+            bodies[idx]['bbox'].push(maxX);
+            bodies[idx]['bbox'].push(maxY);
+
+        }
+
+       // return JSON.stringify(resultNotes);
         return resultNotes;
     };
 
-    $.fn.addBBOX = function (inputJSON) {
-        var bodies = inputJSON['bodies'];
-        for (var idx in bodies) {
-            var len = bodies[idx]['joints'].length;
-
-            var bboxObj = {
-                left1: -1,
-                top1: -1,
-                left2: -1,
-                top2: -1
-            };
-
-            for (var jdx = 0; jdx < len; jdx = jdx + 3) {
-                if (bodies[idx]['joints'][jdx] > 0 && bodies[idx]['joints'][jdx + 1] > 0) {
-                    bboxObj.left1 = bboxObj.left1 == -1 ? bodies[idx]['joints'][jdx] : Math.min(bboxObj.left1, bodies[idx]['joints'][jdx]);
-                    bboxObj.left2 = bboxObj.left2 == -1 ? bodies[idx]['joints'][jdx] : Math.max(bboxObj.left2, bodies[idx]['joints'][jdx]);
-
-                    bboxObj.top1 = bboxObj.top1 == -1 ? bodies[idx]['joints'][jdx + 1] : Math.min(bboxObj.top1, bodies[idx]['joints'][jdx + 1]);
-                    bboxObj.top2 = bboxObj.top2 == -1 ? bodies[idx]['joints'][jdx + 1] : Math.max(bboxObj.top2, bodies[idx]['joints'][jdx + 1]);
-                }
-
-            }
-
-           // bodies[filterId]['joints'][partId * 3]
-            bodies[idx]['joints'].push(bboxObj.left1);
-            bodies[idx]['joints'].push(bboxObj.top1);
-            bodies[idx]['joints'].push(1);
-
-            bodies[idx]['joints'].push(bboxObj.left2);
-            bodies[idx]['joints'].push(bboxObj.top2);
-            bodies[idx]['joints'].push(1);
-        }
-        return inputJSON;
-    };
-
+    // $.fn.updateBBOX = function () {
+    //     var bodies = resultNotes['bodies'];
+    //     var bboxObj = {
+    //         left1: -1,
+    //         top1: -1,
+    //         left2: -1,
+    //         top2: -1
+    //     };
+    //
+    //     for (var idx in bodies) {
+    //         var id1 = environment.bboxPartId1;
+    //         var id2 = environment.bboxPartId2;
+    //         for (jdx in environment.personArr[idx]) {
+    //             if (jdx != id1 && jdx != id2 && $.fn.checkPointInCanvas(environment.personArr[idx][jdx].left, environment.personArr[idx][jdx].top)) {
+    //                 bboxObj.left1 = $.fn.getMin(bboxObj.left1, environment.personArr[idx][jdx].left);
+    //                 bboxObj.left2 = $.fn.getMax(bboxObj.left2, environment.personArr[idx][jdx].left);
+    //                 bboxObj.top1 = $.fn.getMin(bboxObj.top1, environment.personArr[idx][jdx].top);
+    //                 bboxObj.top2 = $.fn.getMax(bboxObj.top2, environment.personArr[idx][jdx].top);
+    //             }
+    //         }
+    //         // bboxObj.left1 = Math.max(0, bboxObj.left1);
+    //         // bboxObj.top1 = Math.max(0, bboxObj.top1);
+    //         // bboxObj.left2 = Math.max(0, bboxObj.left2);
+    //         // bboxObj.top2 = Math.max(0, bboxObj.top2);
+    //
+    //
+    //         environment.personArr[idx][id1].left = bboxObj.left1;
+    //         environment.personArr[idx][id1].top = bboxObj.top1;
+    //         environment.personArr[idx][id2].left = bboxObj.left2;
+    //         environment.personArr[idx][id2].top = bboxObj.top2;
+    //
+    //     }
+    // }
 
     $.fn.getPersonArr = function (inputJSON) {
+        var personArrLen = environment.personArr.length;
         var bodies = inputJSON['bodies'];
         var jsonArr = [];
         var cnt = 0;
         for (var idx in bodies) {
             var len = bodies[idx]['joints'].length;
             var jsonInnerArr = [];
-
+            var bboxObj = {
+                left1: -1,
+                top1: -1,
+                left2: -1,
+                top2: -1
+            };
 
             for (var jdx = 0; jdx < len; jdx = jdx + 3) {
                 jsonInnerArr.push({
@@ -196,12 +174,88 @@
                     topPercentage: parseFloat(bodies[idx]['joints'][jdx + 1]) / parseFloat(environment.imageHeight) // not use
 
                 });
+                console.log("hahhhhhhhhhhhhh");
+                // console.log(personArr[idx]);
+                //must be in canvas
+               // if ($.fn.checkPointInCanvas(bodies[idx]['joints'][jdx], bodies[idx]['joints'][jdx + 1])) {
+
+               // if (parseInt(bodies[idx]['joints'][jdx]) > 0 && parseInt(bodies[idx]['joints'][jdx + 1]) > 0) {
+               //      bboxObj.left1 = $.fn.getMin(bboxObj.left1, bodies[idx]['joints'][jdx]);
+               //      bboxObj.left2 = $.fn.getMax(bboxObj.left2, bodies[idx]['joints'][jdx]);
+               //      bboxObj.top1 = $.fn.getMin(bboxObj.top1, bodies[idx]['joints'][jdx + 1]);
+               //      bboxObj.top2 = $.fn.getMax(bboxObj.top2, bodies[idx]['joints'][jdx + 1]);
+               // // }
+               // }
+               //
+               //  bboxObj.left1 = Math.max(Math.round(Math.random() * 3) + 1, bboxObj.left1);
+               //  bboxObj.top1 = Math.max(Math.round(Math.random() * 3) + 1, bboxObj.top1);
+               //  bboxObj.left2 = Math.max(Math.round(Math.random() * 3) + 1, bboxObj.left2);
+               //  bboxObj.top2 = Math.max(Math.round(Math.random() * 3) + 1, bboxObj.top2);
+
+                //
+                if (personArrLen == 0) {
+                    for (var idx in bodies) {
+                        var id1 = environment.bboxPartId1;
+                        var id2 = environment.bboxPartId2;
+                        for (jdx in environment.personArr[idx]) {
+                            bboxObj.left1 = $.fn.getMin(bboxObj.left1, environment.personArr[idx][id1].left);
+                            bboxObj.left2 = $.fn.getMax(bboxObj.left2, environment.personArr[idx][id2].left);
+                            bboxObj.top1 = $.fn.getMin(bboxObj.top1, environment.personArr[idx][id1].top);
+                            bboxObj.top2 = $.fn.getMax(bboxObj.top2, environment.personArr[idx][id2].top);
+
+                        }
+                    }
+                }
+                else {
+                    for (var idx in bodies) {
+                        bodies[idx]["bbox"] = [];
+                        var id1 = environment.bboxPartId1;
+                        var id2 = environment.bboxPartId2;
+                        var sourceX = environment.personArr[idx][id1].left;
+                        var sourceY = environment.personArr[idx][id1].top;
+                        var targetX = environment.personArr[idx][id2].left;
+                        var targetY = environment.personArr[idx][id2].top;
+
+                        var minX = Math.min(sourceX, targetX);
+                        var minY = Math.min(sourceY, targetY);
+                        var maxX = Math.max(sourceX, targetX);
+                        var maxY = Math.max(sourceY, targetY);
+                        bboxObj.left1 = minX;
+                        bboxObj.top1 = minY;
+                        bboxObj.left2 = maxX;
+                        bboxObj.top2 = maxY;
+                        
+
+                    }
+                }
+
 
                 cnt++;
             }
 
-            environment.bboxPartId1 = (len - 3) / 3;
-            environment.bboxPartId2 = len / 3;
+            //need to consider
+            jsonInnerArr.push({
+                left: bboxObj.left1,
+                top: bboxObj.top1,
+                groupId: idx,
+                partId: len / 3,
+                textId: idx + "_" + len / 3,
+                isZero: false,
+                visible: 1
+            });
+            jsonInnerArr.push({
+                left: bboxObj.left2,
+                top: bboxObj.top2,
+                groupId: idx,
+                partId: (len + 3) / 3,
+                textId: idx + "_" + (len + 3) / 3,
+                isZero: false,
+                visible: 1
+            });
+
+            environment.bboxPartId1 = len / 3;
+            environment.bboxPartId2 = (len + 3) / 3;
+            console.log(bboxObj);
             jsonArr.push(jsonInnerArr);
         }
 
@@ -247,6 +301,8 @@
         if (personId < maxLen) {
             var singlePerson = environment.personArr[personId];
             for (var idx in singlePerson) {
+                // console.log(singlePerson[idx]);
+                // console.log(JSON.stringify(singlePerson[idx]));
                 $.fn.drawJoint(singlePerson[idx]);
             }
         }
@@ -261,10 +317,12 @@
     $.fn.drawJoint = function (singlePersonJSON) {
         var tmpNode = $('<div style="position: absolute;"><canvas class="joint" style="background-color: black" id="jointCanvas' + singlePersonJSON.textId + '" width="' + (environment.circleRadius * 2) + '" height="' + (environment.circleRadius * 2) + '"></canvas></div>');
         var windowPos = canvasToWindow(singlePersonJSON.left, singlePersonJSON.top);
+        //var windowPos = canvasToWindowPercentage(singlePersonJSON.leftPercentage, singlePersonJSON.topPercentage);
         tmpNode.css('left', windowPos.left + 'px');
         tmpNode.css('top', windowPos.top + 'px');
         console.log("singlePerson:" + singlePersonJSON.partId + "-" + windowPos.left + "-" + windowPos.top);
         environment.parent().append(tmpNode);
+        //environment.append(tmpNode);
     };
 
 
@@ -301,16 +359,20 @@
         environment.circleRadius = opts.circleRadius;
         environment.alpha = opts.alpha;
 
-        opts.inputJSON = $.fn.addBBOX(opts.inputJSON);
+        // image.src = opts.inputImage;
+        // image.onload = function () {
+        //     canvas.width = image.width;
+        //     canvas.height = image.height;
+        //     context.drawImage(image, 0, 0);
+        // };
+        // this.imageWidth = image.width;
+        // this.imageHeight = image.height;
         resultNotes = opts.inputJSON;
         environment.inputJSON = opts.inputJSON;
         environment.inputJSON = $.fn.getVisible(environment.inputJSON);
         environment.personArr = new Array();
 
-        environment.bboxPartId1 = -1;
-        environment.bboxPartId2 = -1;
         console.log(environment.inputJSON);
-
 
         environment.personArr = $.fn.getPersonArr(opts.inputJSON);
 
@@ -340,7 +402,6 @@
             // var canvas = document.getElementById("drawCanvas");
             // var context = canvas.getContext("2d");
             // context.drawImage(image, 0, 0);
-            // context.drawImage(image, 0, 0);
             environment.hide();
 
             $.fn.labelImage.loadJoint(parseInt(filterId));
@@ -350,43 +411,33 @@
     };
 
     $.fn.addPerson = function () {
+        // var len = unifyPersonTemplate.length;
+        // for (var i = 0;i < len; i += 3) {
+        //     unifyPersonTemplate[i] += 5;
+        //     unifyPersonTemplate[i + 1] += 5;
+        // }
 
         resultNotes = $.fn.getResultNote();
+        console.log("hhahhhfdasfs");
+        console.log(resultNotes);
         var bodies = resultNotes['bodies'];
+
+        // var randomAdd = Math.round(Math.random() * 20 + 5);
+        // var unifyPersonTemplateCopy = {
+        //     "joints":[63.4491,11.636120336914061,1,55.5981,44.215420336914065,1,20.49690000000001,45.50962033691407,1,1,96.43172033691405,1,11.259747460937504,110,1,93.2881,42.89462033691406,1,101.2597474609375,72,1,99.2597474609375,109,1,39.95910000000001,136.79972033691405,1,15.249300000000005,172.08872033691407,1,24.38510000000001,222.92972033691407,1,81.60110000000002,134.23072033691406,1,73.2597474609375,169,1,86.2597474609375,226,1,56.896100000000004,3.802120336914065,1,70.2597474609375,1,1,42.54910000000001,5.08922033691406,1,80.2597474609375,13,1]
+        // };
+        //var objLen = unifyPersonTemplateCopy["joints"].length;
+
+
+        // for (var idx = 0; idx < objLen; idx += 3) {
+        //     unifyPersonTemplateCopy["joints"][idx] += randomAdd;
+        //     unifyPersonTemplateCopy["joints"][idx + 1] += randomAdd;
+        // }
+       // unifyPersonTemplate = JSON.stringify(unifyPersonTemplateObj);
+
         bodies.push({
-            "joints":[63.4491,11.636120336914061,1,
-                55.5981,44.215420336914065,1,
-                20.49690000000001, 45.50962033691407,1,
-                1,96.43172033691405,1,
-                11.259747460937504,110,1,
-
-                93.2881,42.89462033691406,1,
-                101.2597474609375,72,1,
-                99.2597474609375,109,1,
-                39.95910000000001,136.79972033691405,1,
-                15.249300000000005,172.08872033691407,1,
-
-                24.38510000000001,222.92972033691407,1,
-                81.60110000000002,134.23072033691406,1,
-                73.2597474609375,169,1,
-                86.2597474609375,226,1,
-                56.896100000000004,3.802120336914065,1,
-
-                70.2597474609375,1,1,
-                42.54910000000001,5.08922033691406,1,
-                80.2597474609375, 13,1,
-                2,5,1,
-                105,230,1
-                ]
+            "joints":[63.4491,11.636120336914061,1,55.5981,44.215420336914065,1,20.49690000000001,45.50962033691407,1,1,96.43172033691405,1,11.259747460937504,110,1,93.2881,42.89462033691406,1,101.2597474609375,72,1,99.2597474609375,109,1,39.95910000000001,136.79972033691405,1,15.249300000000005,172.08872033691407,1,24.38510000000001,222.92972033691407,1,81.60110000000002,134.23072033691406,1,73.2597474609375,169,1,86.2597474609375,226,1,56.896100000000004,3.802120336914065,1,70.2597474609375,1,1,42.54910000000001,5.08922033691406,1,80.2597474609375,13,1]
         });
-
-        var randomFloatX = Math.round(Math.random() * 100);
-        var randomFloatY = Math.round(Math.random() * 100);
-        var bodyArr = bodies[bodies.length - 1];
-        for (var idx = 0; idx < bodyArr['joints'].length; idx += 3) {
-            bodyArr['joints'][idx] += randomFloatX;
-            bodyArr['joints'][idx + 1] += randomFloatY;
-        }
 
 
         environment.personArr = $.fn.getPersonArr(resultNotes);
@@ -395,7 +446,6 @@
         $.fn.labelImage.loadJoint(parseInt(filterId));
         $.fn.drawLines(parseInt(filterId));
     };
-
 
     //pass-by-value || pass-by-ref will be ok
     $.fn.getVisible = function (inputJSON) {
@@ -410,6 +460,39 @@
     };
 
 
+    $.fn.myClone = function clone(obj) {
+        var copy;
+
+        // Handle the 3 simple types, and null or undefined
+        if (null == obj || "object" != typeof obj) return obj;
+
+        // Handle Date
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+
+        // Handle Array
+        if (obj instanceof Array) {
+            copy = [];
+            for (var i = 0, len = obj.length; i < len; i++) {
+                copy[i] = clone(obj[i]);
+            }
+            return copy;
+        }
+
+        // Handle Object
+        if (obj instanceof Object) {
+            copy = {};
+            for (var attr in obj) {
+                if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+            }
+            return copy;
+        }
+
+        throw new Error("Unable to copy obj! Its type isn't supported.");
+    }
 
     $.fn.getPersonNum = function () {
         return environment.personArr.length;
@@ -801,6 +884,29 @@
     };
 
     $.fn.printResultJSON = function () {
+        resultNotes = $.fn.getResultNote();
+        console.log(resultNotes);
+        // var bodies = resultNotes['bodies'];
+        // var bboxObj = {
+        //     left1: -1,
+        //     top1: -1,
+        //     left2: -1,
+        //     top2: -1
+        // };
+        //
+        // for (var idx in bodies) {
+        //     var id1 = environment.bboxPartId1;
+        //     var id2 = environment.bboxPartId2;
+        //
+        //     console.log(environment.personArr[idx][id1].left + "," + environment.personArr[idx][id1].top);
+        //     console.log(environment.personArr[idx][id2].left + "," + environment.personArr[idx][id2].top);
+        //
+        //
+        // }
+     //   console(resultNotes);
+    };
+
+    $.fn.printResultJSON2 = function () {
         console.log(resultNotes);
         var len = personTemplate.length;
         var minX = 0x3f3f3f3f;
